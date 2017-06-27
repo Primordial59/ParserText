@@ -48,7 +48,7 @@ class Block
         public static IEnumerable<Block> Load(string path)
             {
             String CurrentPhone =""; //здесь храним текущий обрабатываемый номер, сначала его еще нет
-            int GlobalCounter = 0; // счетчиксобытий во всей загрузке
+            int GlobalCounter = 0; // счетчик событий во всей загрузке
            // int Counter = 0; // счетчик событий по текущему номеру 
             Block ret = null;
             String Separator = ";"; //разделитель данных в формате CSV
@@ -64,8 +64,8 @@ class Block
             foreach (var line in File.ReadLines(path,Encoding.GetEncoding("windows-1251")).Select(l => l.Trim()))
                 {
                 //  if (line.Length == 0 && ret != null)// если подготвленные данные уже есть и достигнута  пустая строка
-                //     if (ret != null && line.StartsWith("Всего по всем абонентам")) 
-                if (ret != null && GlobalCounter>=2)
+                   if (ret != null && line.StartsWith("Всего по всем абонентам")) 
+               // if (ret != null && GlobalCounter>=70)
                 {
                     yield return ret;
                         ret = null;
@@ -103,28 +103,72 @@ class Block
                            // ret.Body.Add(line + CurrentPhone);
                             GlobalCounter++;
                             Day_event = line.Substring(0, 2);
+                            int Time_min = 0;
+                            String Final_Time = "";
+
                             String line2 = line + CurrentPhone + ";" + Year_event.ToString() + ";" + Month_event.ToString() + ";" + Day_event + ";"+Account_Number;
                             string[] splitResult = Regex.Split(line2, Separator);
 
-                            Console.WriteLine("Дата: "+splitResult[0]);
-                            Console.WriteLine("Время: "+splitResult[3]);
-                            Console.WriteLine("Вид услуги: " + splitResult[5]);
-                            Console.WriteLine("Направление вызова: " + splitResult[6]);
-                            Console.WriteLine("Номер оппонента: " + splitResult[9]);
-                            Console.WriteLine("Место вызова: " + splitResult[10]);
-                            Console.WriteLine("Прод/Объем: " + splitResult[14]);
-                            Console.WriteLine("Единица: " + splitResult[15]);
-                            Console.WriteLine("Стоимость: " + splitResult[18]);
-                            Console.WriteLine("Номер: " + splitResult[25]);
-                            Console.WriteLine("Год: " + splitResult[26]);
-                            Console.WriteLine("Месяц: " + splitResult[27]);
-                            Console.WriteLine("Дата: " + splitResult[28]);
-                            Console.WriteLine("Лицевой счет: " + splitResult[29]);
+                          //  Console.WriteLine("Дата: "+splitResult[0]);
+                         //   Console.WriteLine("Время: "+splitResult[3]);
+                         //   Console.WriteLine("Вид услуги: " + splitResult[5]);
+                         //   Console.WriteLine("Направление вызова: " + splitResult[6]);
+                         //   Console.WriteLine("Номер оппонента: " + splitResult[9]);
+                        //    Console.WriteLine("Место вызова: " + splitResult[10]);
+                            // Console.WriteLine("Прод/Объем: " + splitResult[14]);
+                            if (splitResult[14].Length == 5)
+                            {
+                                if (splitResult[14].Substring(2, 1) == ":")
+                                {
+                                    Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(3, 2));
+                                }
+                            }
+
+                            if (Time_min != 0)
+                            {
+                                Final_Time = Time_min.ToString();
+                            }
+                            else
+                            {
+                                Final_Time = splitResult[14];
+                            }
+
+                          //  Console.WriteLine("Прод/Объем: " + Final_Time);
+                         //   Console.WriteLine("Единица: " + splitResult[15]);
+                         //   Console.WriteLine("Стоимость: " + splitResult[18]);
+                           // Console.WriteLine("Номер: " + splitResult[25]);
+                           // Console.WriteLine("Год: " + splitResult[26]);
+                           // Console.WriteLine("Месяц: " + splitResult[27]);
+                           // Console.WriteLine("Дата: " + splitResult[28]);
+                           // Console.WriteLine("Лицевой счет: " + splitResult[29]);
 
 
                             System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand();
                             cmd.CommandType = System.Data.CommandType.Text;
-                            cmd.CommandText = "INSERT MobileBase (phone_number) VALUES ('79026459606')";
+                            //      cmd.CommandText = "INSERT MobileTable (phone_number) VALUES ('79026459606')";
+                            cmd.CommandText = "INSERT MobileTable (phone_number,date_event,time_event,service,target_area,callnumber,call_area,year_event,month_event,day_event,clientaccount,duration,cost,mess)"+
+                                "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess)";
+                            {
+                                // Добавить параметры
+                                cmd.Parameters.AddWithValue("@phone_number", splitResult[25].Trim());
+                                cmd.Parameters.AddWithValue("@date_event", d);
+                                cmd.Parameters.AddWithValue("@time_event", splitResult[3].Trim());
+                                cmd.Parameters.AddWithValue("@service", splitResult[5].Trim());
+                                cmd.Parameters.AddWithValue("@target_area", splitResult[6].Trim());
+                                cmd.Parameters.AddWithValue("@callnumber", splitResult[9].Trim());
+                                cmd.Parameters.AddWithValue("@call_area", splitResult[10].Trim());
+                                cmd.Parameters.AddWithValue("@year_event", Convert.ToDecimal(splitResult[26].Trim()));
+                                cmd.Parameters.AddWithValue("@month_event", Convert.ToDecimal(splitResult[27].Trim()));
+                                cmd.Parameters.AddWithValue("@day_event", Convert.ToDecimal(splitResult[28].Trim()));
+                                cmd.Parameters.AddWithValue("@clientaccount", splitResult[29].Trim());
+                                cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(Final_Time.Trim()));
+                                cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(splitResult[18].Trim()));
+                                cmd.Parameters.AddWithValue("@mess", splitResult[15].Trim());
+                         
+
+                            }
+
+
                             cmd.Connection = sqlConnection1;
 
                             sqlConnection1.Open();
