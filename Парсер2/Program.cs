@@ -56,6 +56,8 @@ class Block
             int Month_event = 5;
             String Day_event = "";
             String Account_Number = "73711191";
+            System.Data.SqlClient.SqlConnection sqlConnection1 =
+            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
 
@@ -63,7 +65,7 @@ class Block
                 {
                 //  if (line.Length == 0 && ret != null)// если подготвленные данные уже есть и достигнута  пустая строка
                 //     if (ret != null && line.StartsWith("Всего по всем абонентам")) 
-                if (ret != null && GlobalCounter>=30)
+                if (ret != null && GlobalCounter>=2)
                 {
                     yield return ret;
                         ret = null;
@@ -119,7 +121,16 @@ class Block
                             Console.WriteLine("Дата: " + splitResult[28]);
                             Console.WriteLine("Лицевой счет: " + splitResult[29]);
 
-                            
+
+                            System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand();
+                            cmd.CommandType = System.Data.CommandType.Text;
+                            cmd.CommandText = "INSERT MobileBase (phone_number) VALUES ('79026459606')";
+                            cmd.Connection = sqlConnection1;
+
+                            sqlConnection1.Open();
+                            cmd.ExecuteNonQuery();
+                           
+
 
                             // foreach (string str in splitResult)
                             // {
@@ -134,7 +145,7 @@ class Block
                                     
                    
                     }
-
+                    sqlConnection1.Close();
                 }
 
 
