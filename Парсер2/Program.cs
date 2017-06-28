@@ -52,20 +52,31 @@ class Block
            // int Counter = 0; // счетчик событий по текущему номеру 
             Block ret = null;
             String Separator = ";"; //разделитель данных в формате CSV
+            bool ItIsRouming = false;
+            String Place = "";
+            String Mess = "";
+            String Cost ="";
+            int input_call = 0;
+            String Day_event = "";
+
+            // !!!! Поля ниже следует корректировать перед каждой загрузкой!!!!
             int Year_event = 2017;
             int Month_event = 5;
-            String Day_event = "";
             String Account_Number = "73711191";
-            System.Data.SqlClient.SqlConnection sqlConnection1 =
-            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            // !!!! Поля выше следует корректировать перед каждой загрузкой!!!!
 
+            System.Data.SqlClient.SqlConnection sqlConnection1 =
+                     
+            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            //  new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            
 
 
             foreach (var line in File.ReadLines(path,Encoding.GetEncoding("windows-1251")).Select(l => l.Trim()))
                 {
                 //  if (line.Length == 0 && ret != null)// если подготвленные данные уже есть и достигнута  пустая строка
-                   if (ret != null && line.StartsWith("Всего по всем абонентам")) 
-               // if (ret != null && GlobalCounter>=70)
+                if (ret != null && line.StartsWith("Всего по всем абонентам")) 
+                //if (ret != null && GlobalCounter>=20)
                 {
                     yield return ret;
                         ret = null;
@@ -80,6 +91,16 @@ class Block
                     {
                         ret = new Block { Title = line.TrimEnd(':'), Body = new List<string>(), PhoneNumber = CurrentPhone };
                     }
+                    if (line.Contains("за пределами домашней"))
+                    {
+                        ItIsRouming = true;
+                    }
+                    else
+                    {
+                        ItIsRouming = false;
+                    }
+
+
                     string Phone = line.Substring(53, 11); // выделяем из строки номер
                     if (CurrentPhone != Phone)
                     {
@@ -109,45 +130,107 @@ class Block
                             String line2 = line + CurrentPhone + ";" + Year_event.ToString() + ";" + Month_event.ToString() + ";" + Day_event + ";"+Account_Number;
                             string[] splitResult = Regex.Split(line2, Separator);
 
-                          //  Console.WriteLine("Дата: "+splitResult[0]);
-                         //   Console.WriteLine("Время: "+splitResult[3]);
-                         //   Console.WriteLine("Вид услуги: " + splitResult[5]);
-                         //   Console.WriteLine("Направление вызова: " + splitResult[6]);
-                         //   Console.WriteLine("Номер оппонента: " + splitResult[9]);
-                        //    Console.WriteLine("Место вызова: " + splitResult[10]);
-                            // Console.WriteLine("Прод/Объем: " + splitResult[14]);
-                            if (splitResult[14].Length == 5)
+                            //   Console.WriteLine("Дата: "+splitResult[0]); //совпадает для роуминга и домашней сети
+                            //   Console.WriteLine("Время: "+splitResult[3]); //совпадает для роуминга и домашней сети
+                            //   Console.WriteLine("Вид услуги: " + splitResult[5]); //совпадает для роуминга и домашней сети
+                            //   Console.WriteLine("Направление вызова: " + splitResult[6]); // !!!!здесь "Дата-время отображения на балансе"  для роуминга
+                            //   Console.WriteLine("Номер оппонента: " + splitResult[9]); //совпадает для роуминга и домашней сети
+                            //   Console.WriteLine("Место вызова: " + splitResult[10]); !!!!здесь "Пусто"  для роуминга
+                            if (ItIsRouming)
                             {
-                                if (splitResult[14].Substring(2, 1) == ":")
-                                {
-                                    Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(3, 2));
-                                }
+                                Place = splitResult[19];
                             }
 
-                            if (Time_min != 0)
+                            else
                             {
-                                Final_Time = Time_min.ToString();
+                                Place = splitResult[10];
+                            }
+                           
+                            // Далее минуты перведем из формата ЧЧ:ММ в целое число
+                            if (ItIsRouming)
+                            {
+                                if (splitResult[11].Length == 5)
+                                {
+                                    if (splitResult[11].Substring(2, 1) == ":")
+                                    {
+                                        Time_min = Convert.ToInt32(splitResult[11].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[11].Substring(3, 2));
+                                    }
+                                }
+
+                                if (Time_min != 0)
+                                {
+                                    Final_Time = Time_min.ToString();
+                                }
+                                else
+                                {
+                                    Final_Time = splitResult[11];
+                                }
                             }
                             else
                             {
-                                Final_Time = splitResult[14];
+                                if (splitResult[14].Length == 5)
+                                {
+                                    if (splitResult[14].Substring(2, 1) == ":")
+                                    {
+                                        Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(3, 2));
+                                    }
+                                }
+
+                                if (Time_min != 0)
+                                {
+                                    Final_Time = Time_min.ToString();
+                                }
+                                else
+                                {
+                                    Final_Time = splitResult[14];
+                                }
+                            }
+                            // Console.WriteLine("Прод/Объем: " + Final_Time);
+
+                            // Console.WriteLine("Единица: " + splitResult[15]);
+                            if (ItIsRouming)
+                            {
+                                Mess = splitResult[13];
+                            }
+                            else
+                            {
+                                Mess = splitResult[15];
                             }
 
-                          //  Console.WriteLine("Прод/Объем: " + Final_Time);
-                         //   Console.WriteLine("Единица: " + splitResult[15]);
-                         //   Console.WriteLine("Стоимость: " + splitResult[18]);
-                           // Console.WriteLine("Номер: " + splitResult[25]);
-                           // Console.WriteLine("Год: " + splitResult[26]);
-                           // Console.WriteLine("Месяц: " + splitResult[27]);
-                           // Console.WriteLine("Дата: " + splitResult[28]);
-                           // Console.WriteLine("Лицевой счет: " + splitResult[29]);
+                            if (ItIsRouming)
+                            {
+                                Cost= splitResult[16];
+                            }
+                            else
+                            {
+                                Cost = splitResult[18];
+                            }
+                            // Console.WriteLine("Стоимость: " + splitResult[18]);
+
+
+                            // Console.WriteLine("Номер: " + splitResult[25]);
+                            // Console.WriteLine("Год: " + splitResult[26]);
+                            // Console.WriteLine("Месяц: " + splitResult[27]);
+                            // Console.WriteLine("Дата: " + splitResult[28]);
+                            // Console.WriteLine("Лицевой счет: " + splitResult[29]);
+                            if(splitResult[5].Substring(0,4)=="Вход")
+                            {
+                                input_call = 1;
+                            }
+                            else
+                            {
+                                input_call = 0;
+                            }
+
+
+
 
 
                             System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand();
                             cmd.CommandType = System.Data.CommandType.Text;
                             //      cmd.CommandText = "INSERT MobileTable (phone_number) VALUES ('79026459606')";
-                            cmd.CommandText = "INSERT MobileTable (phone_number,date_event,time_event,service,target_area,callnumber,call_area,year_event,month_event,day_event,clientaccount,duration,cost,mess)"+
-                                "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess)";
+                            cmd.CommandText = "INSERT MobileTable (phone_number,date_event,time_event,service,target_area,callnumber,call_area,year_event,month_event,day_event,clientaccount,duration,cost,mess,input_call)"+
+                                "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess,@input_call)";
                             {
                                 // Добавить параметры
                                 cmd.Parameters.AddWithValue("@phone_number", splitResult[25].Trim());
@@ -156,24 +239,28 @@ class Block
                                 cmd.Parameters.AddWithValue("@service", splitResult[5].Trim());
                                 cmd.Parameters.AddWithValue("@target_area", splitResult[6].Trim());
                                 cmd.Parameters.AddWithValue("@callnumber", splitResult[9].Trim());
-                                cmd.Parameters.AddWithValue("@call_area", splitResult[10].Trim());
+                                cmd.Parameters.AddWithValue("@call_area", Place.Trim());
                                 cmd.Parameters.AddWithValue("@year_event", Convert.ToDecimal(splitResult[26].Trim()));
                                 cmd.Parameters.AddWithValue("@month_event", Convert.ToDecimal(splitResult[27].Trim()));
                                 cmd.Parameters.AddWithValue("@day_event", Convert.ToDecimal(splitResult[28].Trim()));
                                 cmd.Parameters.AddWithValue("@clientaccount", splitResult[29].Trim());
                                 cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(Final_Time.Trim()));
-                                cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(splitResult[18].Trim()));
-                                cmd.Parameters.AddWithValue("@mess", splitResult[15].Trim());
-                         
+                                cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(Cost.Trim()));
+                                cmd.Parameters.AddWithValue("@mess", Mess.Trim());
+                                cmd.Parameters.AddWithValue("@input_call", input_call);
+
 
                             }
 
 
-                            cmd.Connection = sqlConnection1;
-
-                            sqlConnection1.Open();
-                            cmd.ExecuteNonQuery();
-                           
+                                cmd.Connection = sqlConnection1;
+                                sqlConnection1.Open();
+                                cmd.ExecuteNonQuery();
+                                Console.WriteLine("Запись строки: " + GlobalCounter.ToString());
+                           if (GlobalCounter==1259)
+                            {
+                                //Стоять здесь!
+                            }
 
 
                             // foreach (string str in splitResult)
@@ -186,8 +273,9 @@ class Block
                     catch (SystemException)
                     {
                         d = null;
-                                    
-                   
+                       // Console.WriteLine("исключительная ситуация");
+
+
                     }
                     sqlConnection1.Close();
                 }
