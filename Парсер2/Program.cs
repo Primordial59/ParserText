@@ -155,7 +155,7 @@ namespace Парсер2
                                         String da_p = de_p.Substring(0, 2);
                                         int count_ret = 0;
                                         try { 
-                                            count_ret = AddToDB(de_p, ph_p, "00:00:00", "Correct", " ", " ", " ", ye_p, me_p, da_p, ac_p, "0", delta_p, " ", 0, "MTS");
+                                            count_ret = AddToDB(de_p, ph_p, "00:00:00", "Correct", " ", "Correct", " ", ye_p, me_p, da_p, ac_p, "0", delta_p, " ", 0, "MTS");
                                             GlobalCounter = GlobalCounter + 1;
                                             SummCalcCost = SummCalcCost + delta;
                                             
