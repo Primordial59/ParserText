@@ -17,6 +17,9 @@ namespace Парсер2
         static void Main(string[] args)
         {
             String Oper = "0";
+            Console.WriteLine("Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
+            Console.WriteLine("Файл загрузки Мегафон (формат CSV, полученный из Excel файла)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt");
+            Console.WriteLine("----------------------------------------------------");
             Console.WriteLine("Если оператор МТС нажмите цифру 1, если Мегафон - 2 ");
             Oper = Console.ReadLine();
             if (Oper == "1") // работаем с МТС
@@ -24,7 +27,6 @@ namespace Парсер2
                 // работаем с МТС          
                 //   foreach ( var m in MTS.Load("mts.xml"));
                 foreach (var m in MTS.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml")) ;
-
             }
             else
             {
@@ -37,19 +39,13 @@ namespace Парсер2
                     Console.WriteLine("Не выбран требуемый Оператор");
                     Console.WriteLine("Работа завершена");
                 }
-
-
             }
-
-
-
         }
     }
 
     class MTS
     {
-
-
+        
         public static IEnumerable<MTS> Load(string path)
         {
 
@@ -67,9 +63,6 @@ namespace Парсер2
 
             MTS ret = null;
             ret = new MTS { };
-            System.Data.SqlClient.SqlConnection sqlConnection1 =
-            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-            //   new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
             XmlTextReader textReader = new XmlTextReader(path);
             textReader.Read();
@@ -102,11 +95,9 @@ namespace Парсер2
                         Console.WriteLine("Обработано " + GlobalCounter.ToString() + " строк");
                         Console.WriteLine("Фактическсая сумма из расчета по расшифровке строк(Без НДС) " + SummCalcCost.ToString());
                         Console.WriteLine("Формальная сумма из расчета по документу (Без НДС) " + SummBillCost.ToString());
-                     //   Console.WriteLine("Формальная сумма из счет фактуры (Без НДС) " + textReader.GetAttribute("awt"));
+                        Console.WriteLine("Для сравнения реальную сумму см. из счет-фактуры (Без НДС) в документе c сайта МТС");
 
                         yield return ret;
-
-
                     }
 
                     if (CurrentTag == "b") // Это шапка документа из нее берег глобальные данные
@@ -132,15 +123,12 @@ namespace Парсер2
                             //прошла смена номера
                             // мы должны для старого номера абонента проверить накопленную сумму, сравнив ее с суумой по итоговому полю из счета для этого номера
                             // и если будет обнаружена разница - ее нужно будет записать в БД корректирующей записью: delta
-
                             {
                                 delta = BillCost - CalcCost;
                                 Console.WriteLine("Дельта =" + delta.ToString() + " на номере: " + phone_number + " Вычислено= " + CalcCost + " Начислено= " + BillCost);
                                 CalcCost = 0;
-
                                   
                                     //Собственно добавка в базу
-
                                     if (delta != 0)
                                     {
 
@@ -158,16 +146,12 @@ namespace Парсер2
                                             count_ret = AddToDB(de_p, ph_p, "00:00:00", "Correct", " ", "Correct", " ", ye_p, me_p, da_p, ac_p, "0", delta_p, " ", 0, "MTS");
                                             GlobalCounter = GlobalCounter + 1;
                                             SummCalcCost = SummCalcCost + delta;
-                                            
-                                        }
+                                            }
                                         catch
-                                        {
+                                            {
                                             Console.WriteLine("Корректирующая запись не добавлена в Базу Данных");
-                                        }
-
-
+                                            }
                                     }
-                                
                             }
 
                             if (textReader.GetAttribute("n") != phone_number)
@@ -179,15 +163,11 @@ namespace Парсер2
 
                         }
 
-
-                       
-                   
+        
                         phone_number = textReader.GetAttribute("n"); //актуализируем поле текущего номера абонента
-
                         
                     }
                 }
-
 
                 // В таком элементе храянться номера абонента для собственно биллинга
                 if (textReader.Name == "ds")
@@ -197,24 +177,27 @@ namespace Парсер2
                         phone_number = textReader.GetAttribute("n");
                     }
                 }
-                // В таком элементе храняться строк-расшифровки вызовов
+                // В таком элементе храняться строки-расшифровки вызовов, каждую из них запишем в БД
                 if ((textReader.Name == "i") || (textReader.Name == "ss"))
                 {
                     if ((((textReader.AttributeCount >= 11) && (textReader.AttributeCount <= 15)) && (textReader.Name == "i")) || (textReader.Name == "ss"))
-
                     {
-                        if (phone_number.Trim()== "79129829555")
-                        {
-                            //здесь!!
-                        }
+                        //if (phone_number.Trim()== "79129829555")
+                        //{
+                        //    //здесь!!
+                        //}
 
-                        if (textReader.Name == "ss")
+                        if (textReader.Name == "ss") // здесь абонентскач плата
                         {
-                            date_event = textReader.GetAttribute("sd");
-                            Day_event = date_event.Substring(0, 2);
-                            call_number = "Абонентская";
-                            service = textReader.GetAttribute("n");
-                            cost = textReader.GetAttribute("awt");
+                            if (phone_number=="791224963905")
+                            {
+                                //здесь!
+                            }
+                            date_event = textReader.GetAttribute("sd"); //
+                            Day_event = date_event.Substring(0, 2);     //
+                            call_number = "Subscriber";                 //
+                            service = textReader.GetAttribute("n");   //
+                            cost = textReader.GetAttribute("awt");    //
                             if (cost != "")
                             {
                                 CalcCost = CalcCost + Convert.ToDecimal(cost);
@@ -222,20 +205,20 @@ namespace Парсер2
                             }
 
                             if (textReader.GetAttribute("ed") == null)
-                                              
                             { 
                                Console.WriteLine("Есть изменение условий на номере:" + phone_number); 
                             }
+
                         }
-                        else
+                        else  // здесь собственно строки расшифровки (биллинг)
                         {
-                            date_event = textReader.GetAttribute("d");
-                            Day_event = date_event.Substring(0, 2);
-                            call_number = textReader.GetAttribute("n");
-                            call_area = textReader.GetAttribute("zp");
+                            date_event = textReader.GetAttribute("d"); //
+                            Day_event = date_event.Substring(0, 2);  //
+                            call_number = textReader.GetAttribute("n"); //
+                            call_area = textReader.GetAttribute("zp");  //
                             target_area = textReader.GetAttribute("zv");
-                            service = textReader.GetAttribute("s");
-                            cost = textReader.GetAttribute("c");
+                            service = textReader.GetAttribute("s");  //
+                            cost = textReader.GetAttribute("c");  //
                             if (cost != "")
                             {
                                 CalcCost = CalcCost + Convert.ToDecimal(cost);
@@ -268,7 +251,6 @@ namespace Парсер2
                                 {
                                     Mess = "Штука";
                                 }
-
                             }
                             // Выделим минуты голосового трафика
                             if (duration.Length == 4 && duration.Substring(1, 1) == ":")
@@ -295,6 +277,11 @@ namespace Парсер2
                                 else
                                     Final_Time = duration;
                             }
+                            // Еще одна проверка на вшивость, если пролез символ : не допускаем его появления!
+                            if (Final_Time.IndexOf(":") >= 0)
+                            {
+                                Final_Time = "0";
+                            }
                         }
 
                         string str_d = date_event.Substring(0, 10);
@@ -310,58 +297,19 @@ namespace Парсер2
                                 t = date_event.Substring(11, 8);
                             }
                         }
-
-                        DateTime? d;
+                       // Нижде попытка пополнить БД
+                        int count_ret = 0;
                         try
                         {
-                            d = DateTime.ParseExact(str_d, "d", null);
-
-                            System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand();
-                            cmd.CommandType = System.Data.CommandType.Text;
-                            cmd.CommandText = "INSERT MobileTable (phone_number,date_event,time_event,service,target_area,callnumber,call_area,year_event,month_event,day_event,clientaccount,duration,cost,mess,input_call,operator)" +
-                                "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess,@input_call,@operator)";
-                            {
-                                // Добавить параметры
-                                cmd.Parameters.AddWithValue("@phone_number", phone_number.Trim());
-                                cmd.Parameters.AddWithValue("@date_event", d);
-                                cmd.Parameters.AddWithValue("@time_event", t.Trim());
-                                cmd.Parameters.AddWithValue("@service", service.Trim());
-                                cmd.Parameters.AddWithValue("@target_area", target_area.Trim());
-                                cmd.Parameters.AddWithValue("@callnumber", call_number.Trim());
-                                cmd.Parameters.AddWithValue("@call_area", call_area.Trim());
-                                cmd.Parameters.AddWithValue("@year_event", Year_event);
-                                cmd.Parameters.AddWithValue("@month_event", Month_event);
-                                cmd.Parameters.AddWithValue("@day_event", Convert.ToDecimal(Day_event.Trim()));
-                                cmd.Parameters.AddWithValue("@clientaccount", Account_Number);
-                                if (Final_Time == "")
-                                {
-                                    cmd.Parameters.AddWithValue("@duration", 0);
-                                }
-                                else
-                                {
-                                    cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(Final_Time.Trim()));
-                                }
-                                cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(cost.Trim()));
-                                cmd.Parameters.AddWithValue("@mess", Mess.Trim());
-                                cmd.Parameters.AddWithValue("@input_call", input_call);
-                                cmd.Parameters.AddWithValue("@operator", "MTS");
-
-
-                            }
-                            cmd.Connection = sqlConnection1;
-                            sqlConnection1.Open();
-                            cmd.ExecuteNonQuery();
+                            
+                            count_ret = AddToDB(str_d, phone_number , t.Trim(), service.Trim(), target_area.Trim(), call_number.Trim(), call_area.Trim(), Year_event, Month_event, Day_event.Trim(), Account_Number, Final_Time, cost.Trim(), Mess.Trim(), input_call, "MTS");
                             GlobalCounter = GlobalCounter + 1;
-                            //       Console.WriteLine("Запись строки: " + GlobalCounter.ToString());
 
                         }
-                        catch (SystemException)
+                        catch
                         {
-                            d = null;
-                            // Console.WriteLine("исключительная ситуация");
-
+                            Console.WriteLine("Pапись расшифровки не добавлена в Базу Данных");
                         }
-                        sqlConnection1.Close();
 
                     }
 
@@ -373,8 +321,8 @@ namespace Парсер2
         {
             int ret_num = 0;
             System.Data.SqlClient.SqlConnection sqlConnection1 =
-            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-            //   new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            // new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+                  new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
             string str_d = de.Substring(0, 10); // получили дату
@@ -401,7 +349,15 @@ namespace Парсер2
                     cmd.Parameters.AddWithValue("@month_event", mev); //получили месяц
                     cmd.Parameters.AddWithValue("@day_event", Convert.ToDecimal(dev)); // день события
                     cmd.Parameters.AddWithValue("@clientaccount", an);  // лицевой счет
-                    cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(du.Trim())); // продолжительность
+                    if (du == "")
+                                {
+                                    cmd.Parameters.AddWithValue("@duration", 0); // продолжительность    = 0
+                                }
+                    else
+                                {
+                                    cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(du.Trim())); // продолжительность    
+                                }
+                    
                     cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(co.Trim())); // стоимость
                     cmd.Parameters.AddWithValue("@mess", ms.Trim()); //единица измерения
                     cmd.Parameters.AddWithValue("@input_call", ic); //признак входного звонка(сообщения)
@@ -411,13 +367,12 @@ namespace Парсер2
                 cmd.Connection = sqlConnection1;
                 sqlConnection1.Open();
                 cmd.ExecuteNonQuery();
-                //       Console.WriteLine("Запись строки: " + cou.ToString());
                 ret_num = 1;
             }
             catch (SystemException)
             {
                 d = null;
-                // Console.WriteLine("исключительная ситуация");
+                 Console.WriteLine("Ошибка записи в БД - исключительная ситуация!");
 
             }
             sqlConnection1.Close();
@@ -489,8 +444,8 @@ namespace Парсер2
 
 
             System.Data.SqlClient.SqlConnection sqlConnection1 =
-            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-            //   new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+           // new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+               new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
 
