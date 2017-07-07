@@ -28,7 +28,7 @@ namespace Парсер2
             else
             {
                 download_file = args[0];
-                Console.WriteLine("Назначен файл зайгрузки " + args[0]);
+                Console.WriteLine("Назначен файл зайгрузки МТС" + args[0]);
 
             }
 
