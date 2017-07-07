@@ -16,12 +16,12 @@ namespace Парсер2
     {
         static void Main(string[] args)
         {
-            String Oper = "0";
+               String Oper = "0";
             String download_file = "";
 
             if (args.Length == 0)
             {
-                download_file = "W:\\Подразделения\\Дир - ИТ\\Связь\\download\\mts.xml";
+                download_file = "W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml";
                 Console.WriteLine("Назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
                 Console.WriteLine("--------ДЛЯ МТС ПОЛНЫЙ ПУТЬ ФАЙЛА ЗАГРУЗКИ МОЖНО ПЕРЕДАТь ПАРАМЕТРОМ КОМАНДНОЙ СТРОКИ------");
             }
