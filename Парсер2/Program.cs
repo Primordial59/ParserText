@@ -22,7 +22,7 @@ namespace Парсер2
             if (args.Length == 0)
             {
                 download_file = "W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml";
-                Console.WriteLine("Назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
+                //Console.WriteLine("Назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
                 Console.WriteLine("--------ДЛЯ МТС ПОЛНЫЙ ПУТЬ ФАЙЛА ЗАГРУЗКИ МОЖНО ПЕРЕДАТь ПАРАМЕТРОМ КОМАНДНОЙ СТРОКИ------");
             }
             else
@@ -40,7 +40,8 @@ namespace Парсер2
                 // работаем с МТС          
                 //   foreach ( var m in MTS.Load("mts.xml"));
                 //    foreach (var m in MTS.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml")) ;
-                foreach (var m in MTS.Load(download_file)) ;
+                foreach (var m 
+                    in MTS.Load(download_file)) ;
             }
             else
             {
@@ -102,9 +103,17 @@ namespace Парсер2
 
                 // Тип всех узлов это Элементы
                 XmlNodeType nType = textReader.NodeType;
-                if (nType == XmlNodeType.Element)
+
+
+                if ((nType == XmlNodeType.Element) || (nType == XmlNodeType.EndElement))
                 {
-                    CurrentTag = textReader.Name;
+
+                    CurrentTag = textReader.Name; // Пропустим проблемный конечный элемент
+                    if ((CurrentTag == "pd") || ((CurrentTag == "ss") && (nType== XmlNodeType.EndElement))) 
+                    {
+                        continue;
+                    }
+
                     if (ret != null && CurrentTag == "f") // финальная проверка на необходимость завершения работы со счетом и вывод итогов
                     {
                         Console.WriteLine("Обработано " + GlobalCounter.ToString() + " строк");
@@ -197,14 +206,14 @@ namespace Парсер2
                 {
                     if ((((textReader.AttributeCount >= 11) && (textReader.AttributeCount <= 15)) && (textReader.Name == "i")) || (textReader.Name == "ss"))
                     {
-                        //if (phone_number.Trim()== "79129829555")
-                        //{
-                        //    //здесь!!
-                        //}
+                        if (phone_number.Trim() == "79129845502")
+                        {
+                            //здесь!!
+                        }
 
                         if (textReader.Name == "ss") // здесь абонентскач плата
                         {
-                            if (phone_number=="791224963905")
+                            if (phone_number=="79129845502")
                             {
                                 //здесь!
                             }
@@ -336,8 +345,8 @@ namespace Парсер2
         {
             int ret_num = 0;
             System.Data.SqlClient.SqlConnection sqlConnection1 =
-            // new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-             new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            // new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
             string str_d = de.Substring(0, 10); // получили дату
