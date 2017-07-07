@@ -17,16 +17,30 @@ namespace Парсер2
         static void Main(string[] args)
         {
             String Oper = "0";
-            Console.WriteLine("Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
-            Console.WriteLine("Файл загрузки Мегафон (формат CSV, полученный из Excel файла)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt");
-            Console.WriteLine("----------------------------------------------------");
-            Console.WriteLine("Если оператор МТС нажмите цифру 1, если Мегафон - 2 ");
+            String download_file = "";
+
+            if (args.Length == 0)
+            {
+                download_file = "W:\\Подразделения\\Дир - ИТ\\Связь\\download\\mts.xml";
+                Console.WriteLine("Назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
+                Console.WriteLine("--------ДЛЯ МТС ПОЛНЫЙ ПУТЬ ФАЙЛА ЗАГРУЗКИ МОЖНО ПЕРЕДАТь ПАРАМЕТРОМ КОМАНДНОЙ СТРОКИ------");
+            }
+            else
+            {
+                download_file = args[0];
+                Console.WriteLine("Назначен файл зайгрузки " + args[0]);
+
+            }
+
+            Console.WriteLine("Назначен Файл загрузки Мегафон (формат CSV, полученный из Excel файла)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt");
+            Console.WriteLine("Если оператор МТС нажмите цифру 1, если Мегафон - 2, для выхода - 0");
             Oper = Console.ReadLine();
             if (Oper == "1") // работаем с МТС
             {
                 // работаем с МТС          
                 //   foreach ( var m in MTS.Load("mts.xml"));
-                foreach (var m in MTS.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml")) ;
+                //    foreach (var m in MTS.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml")) ;
+                foreach (var m in MTS.Load(download_file)) ;
             }
             else
             {
@@ -36,10 +50,11 @@ namespace Парсер2
                 }
                 else
                 {
-                    Console.WriteLine("Не выбран требуемый Оператор");
                     Console.WriteLine("Работа завершена");
                 }
             }
+            
+
         }
     }
 
@@ -322,7 +337,7 @@ namespace Парсер2
             int ret_num = 0;
             System.Data.SqlClient.SqlConnection sqlConnection1 =
             // new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-                  new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+             new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
             string str_d = de.Substring(0, 10); // получили дату
