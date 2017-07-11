@@ -475,6 +475,8 @@ namespace Парсер2
 
             foreach (var line in File.ReadLines(path, Encoding.GetEncoding("windows-1251")).Select(l => l.Trim()))
             {
+                Decimal Final_Cost = 0;
+
                 //  if (line.Length == 0 && ret != null)// если подготвленные данные уже есть и достигнута  пустая строка
                 if (ret != null && line.StartsWith("Всего по всем абонентам"))
                 //if (ret != null && GlobalCounter>=20)
@@ -602,10 +604,14 @@ namespace Парсер2
                             if (ItIsRouming)
                             {
                                 Cost = splitResult[16];
+                                Final_Cost = Convert.ToDecimal(Cost.Trim());
+                                Final_Cost=Final_Cost/Convert.ToDecimal(1.18);
                             }
                             else
                             {
                                 Cost = splitResult[18];
+                                Final_Cost = Convert.ToDecimal(Cost.Trim());
+                                Final_Cost = Final_Cost / Convert.ToDecimal(1.18);
                             }
                             // Console.WriteLine("Стоимость: " + splitResult[18]);
                             // Console.WriteLine("Номер: " + splitResult[25]);
@@ -643,7 +649,7 @@ namespace Парсер2
                                 cmd.Parameters.AddWithValue("@day_event", splitResult[28].Trim());
                                 cmd.Parameters.AddWithValue("@clientaccount", Account_Number.Trim());
                                 cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(Final_Time.Trim()));
-                                cmd.Parameters.AddWithValue("@cost", Convert.ToDecimal(Cost.Trim()));
+                                cmd.Parameters.AddWithValue("@cost", Final_Cost);
                                 cmd.Parameters.AddWithValue("@mess", Mess.Trim());
                                 cmd.Parameters.AddWithValue("@input_call", input_call);
                                 cmd.Parameters.AddWithValue("@operator", "Megafon");
