@@ -622,13 +622,13 @@ namespace Парсер2
                     if (ItIsRouming)
                     {
                         Mess = splitResult[13];
-                        if (Mess == "Минута")
+                        if ((Mess == "Минута") || (Mess == "Минут"))
                         { Mess = "Секунда"; }
                     }
                     else
                     {
                         Mess = splitResult[15];
-                        if (Mess == "Минута")
+                        if ((Mess == "Минута") || (Mess == "Минут"))
                         { Mess = "Секунда"; }
 
                     }
