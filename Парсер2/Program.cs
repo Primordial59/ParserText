@@ -22,18 +22,20 @@ namespace Парсер2
             if (args.Length == 0)
             {
                 download_file = "W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml";
-                //Console.WriteLine("Назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
+                Console.WriteLine("По умолчанию: назначен Файл загрузки МТС (формат XML) - W:\\Подразделения\\Дир-ИТ\\Связь\\download\\mts.xml");
                 Console.WriteLine("--------ДЛЯ МТС ПОЛНЫЙ ПУТЬ ФАЙЛА ЗАГРУЗКИ МОЖНО ПЕРЕДАТь ПАРАМЕТРОМ КОМАНДНОЙ СТРОКИ------");
             }
             else
             {
                 download_file = args[0];
-                Console.WriteLine("Назначен файл зайгрузки МТС" + args[0]);
+                Console.WriteLine("Назначен файл зайгрузки МТС " + args[0]);
 
             }
 
-            Console.WriteLine("Назначен Файл загрузки Мегафон (формат CSV, полученный из Excel файла)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt");
-            Console.WriteLine("Если оператор МТС нажмите цифру 1, если Мегафон - 2, для выхода - 0");
+            Console.WriteLine("Назначен Файл загрузки Теле2 (формат CSV, полученный из Excel файла, расширение - .csv)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Tele2.csv");
+            Console.WriteLine("Назначен Файл загрузки Мегафон (формат CSV, полученный из Excel файла, расширение .txt)- W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt");
+            Console.WriteLine("Если оператор МТС нажмите цифру 1, если Теле2 - 2, если Мегафон - 3, для выхода - 0");
+
             Oper = Console.ReadLine();
             if (Oper == "1") // работаем с МТС
             {
@@ -45,11 +47,17 @@ namespace Парсер2
             }
             else
             {
-                if (Oper == "2")  // работаем с Мегафон
+                if (Oper == "2")  // работаем с Теле2
                 {
-                    foreach (var b  in Megafon.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt")) ;
+                    foreach (var b  in Tele2.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Tele2.csv")) ;
                 }
                 else
+                if (Oper == "3")  // работаем с Мегафон
+                {
+                    foreach (var b in Megafon.Load("W:\\Подразделения\\Дир-ИТ\\Связь\\download\\Megafon.txt")) ;
+                }
+
+
                 {
                     Console.WriteLine("Работа завершена");
                 }
@@ -470,7 +478,7 @@ namespace Парсер2
 
             System.Data.SqlClient.SqlConnection sqlConnection1 =
            //  new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-               new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+             new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
 
 
@@ -614,7 +622,13 @@ namespace Парсер2
                         }
                         else
                         {
-                            Final_Time = splitResult[14];
+                            if (splitResult[14] != "")
+                            {
+                                Final_Time = splitResult[14];
+                            }
+                            else
+                                Final_Time = "1"; // подстраховка на тот случай, когда в количестыве SMS не указано "1 штука"
+
                         }
                     }
                     // Console.WriteLine("Прод/Объем: " + Final_Time);
@@ -695,12 +709,14 @@ namespace Парсер2
                         sqlConnection1.Open();
                         cmd.ExecuteNonQuery();
                         sqlConnection1.Close();
+                     
 
                         }
                     catch
                     {
                         sqlConnection1.Close();
                         Console.WriteLine("Ошибка Записи строки: " + GlobalCounter.ToString());
+                        
                     }
                 }
 
@@ -711,6 +727,346 @@ namespace Парсер2
             }
         }
     }
+
+
+
+    class Tele2
+    {
+
+        public IList<string> Body;
+        public string PhoneNumber;
+
+        public static IEnumerable<Tele2> Load(string path)
+        {
+            String CurrentPhone = ""; //здесь храним текущий обрабатываемый номер, сначала его еще нет
+            int GlobalCounter = 0; // счетчик событий во всей загрузке
+            Decimal SummCalcCost = 0;
+            Tele2 ret = null;
+            String Separator = ";"; //разделитель данных в формате CSV
+
+       
+            // !!!! Поля ниже следует вносить при каждой загрузке!!!!
+            int Year_event = 0;
+            Console.WriteLine("Введите год и нажмите Enter, например: 2017");
+            try
+            {
+                Year_event = Convert.ToInt32(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Загрузка превана из-за ошибки ввода");
+            }
+
+            int Month_event = 0;
+
+            Console.WriteLine("Введите месяц числом и нажмите Enter, например: 5");
+            try
+            {
+                Month_event = Convert.ToInt32(Console.ReadLine());
+            }
+            catch
+            {
+                Console.WriteLine("Загрузка превана из-за ошибки ввода");
+            }
+            String Account_Number = "";
+            Console.WriteLine("Введителицевой счет и нажмите Enter , например: 1905909");
+            try
+            {
+                Account_Number = Console.ReadLine();
+            }
+            catch
+            {
+                Console.WriteLine("Загрузка превана из-за ошибки ввода");
+            }
+            // !!!! Поля выше следует вносить при  каждой загрузке!!!!
+
+
+
+            System.Data.SqlClient.SqlConnection sqlConnection1 =
+           //     new System.Data.SqlClient.SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+             new System.Data.SqlClient.SqlConnection("Data Source=b-sql-test;Initial Catalog=MobileBase;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+
+
+            foreach (var line in File.ReadLines(path, Encoding.GetEncoding("windows-1251")).Select(l => l.Trim()))
+            {
+                GlobalCounter++;
+                String Place = "";
+                String Mess = "";
+                String Cost = "";
+                int input_call = 0;
+                String Day_event = "";
+                String Time_event = "";
+                String Service = "";
+                String Callnumber = "";
+                String Final_Time = "";
+                decimal Final_Time_d = 0;
+           //     String Month_event_subscriber = "";
+                String Target_area = "";
+                Decimal Final_Cost = Convert.ToDecimal(0);
+
+
+                //  if (line.Length == 0 && ret != null)// если подготвленные данные уже есть и достигнута  пустая строка
+                if (ret != null && line.StartsWith("Всего по всем абонентам"))
+                //if (ret != null && GlobalCounter>=20)
+                {
+                    Console.WriteLine("Обработано " + GlobalCounter.ToString() + " строк");
+                    Console.WriteLine("Фактическсая сумма из расчета по расшифровке строк(без НДС) " + SummCalcCost.ToString());
+                    Console.WriteLine("Для сравнения реальную сумму см. из счет-фактуры (без НДС) в документе c сайта Tele2");
+                    yield return ret;
+
+                    ret = null;
+                    continue;
+                }
+                // Пропустим незначимые строки
+                if (line.Length < 11)
+                {
+                    continue;
+                }
+
+                // определим новый номер или продолжаем работать со старым
+                if ((line.StartsWith("Абонент: ")) || (line.Substring(0, 11) == "Начисления:"))
+                {
+                    if (line.StartsWith("Абонент: "))
+                    {
+                        if (CurrentPhone == "")
+                        {
+                            ret = new Tele2 { Body = new List<string>(), PhoneNumber = CurrentPhone };
+                        }
+
+                        string Phone = line.Substring(9, 11); // выделяем из строки номер
+                        if (CurrentPhone != Phone)
+                        {
+                            // здесь можно инициализирвоать новый объект для очередного номера телефона
+                            CurrentPhone = Phone;
+                            Console.WriteLine("Обработка номера: " + CurrentPhone);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        //  При отладке обнаружил, что это дублирующее начисление, хотя здесь реализована интересная идея  использовать статическую функцию из другого класса!
+                        //    if (line.StartsWith("Начисления:"))
+                        //    {
+
+                        //        DateTime? d;
+                        //        try
+                        //        {
+                        //            int month_lenght = Month_event.ToString().Trim().Length;
+                        //            if(month_lenght==1)
+                        //            {
+                        //                Month_event_subscriber = "0" + Month_event.ToString().Trim();
+                        //            }
+                        //            else
+                        //            {
+                        //                Month_event_subscriber = Month_event.ToString().Trim();
+
+                        //            }
+
+                        //            d = DateTime.ParseExact("01." + Month_event_subscriber + "." + Year_event.ToString().Trim(), "d", null);
+
+                        //        }
+                        //        catch (SystemException)
+                        //        {
+                        //            d = null;
+                        //            Console.WriteLine("Ошибка распознания даты, "+CurrentPhone);
+                        //            continue;
+
+                        //        }
+                        //        Service = "Subscriber";
+                        //        Callnumber = "Subscriber";
+                        //        Place = "";
+                        //        Target_area = "";
+                        //        Day_event = "01";
+                        //        Time_event = "00:00:00";
+                        //        string[] splitResult = Regex.Split(line, Separator);
+                        //        Cost = splitResult[9];
+                        //        Final_Cost = Convert.ToDecimal(Cost.Trim());
+                        //        Final_Cost = Final_Cost / Convert.ToDecimal(1.18);
+                        ////        SummCalcCost = SummCalcCost + Final_Cost;
+                        //        Final_Time = "";
+                        //        Mess = "";
+                        //        input_call = 0;
+                        //        String str_d = Day_event + "." + Month_event_subscriber + "." + Year_event.ToString();
+
+                        //        //  Сделать вызов функции записи в БД по аналогии c МТС
+                        //        int count_ret = 0;
+                        //        try
+                        //        {
+                        //           count_ret = MTS.AddToDB(str_d, CurrentPhone, Time_event, Service, Target_area, Callnumber, Place, Year_event, Month_event, Day_event, Account_Number, Final_Time, Final_Cost.ToString(), Mess.Trim(), input_call, "Tele2");
+                        //          }
+                        //        catch
+                        //        {
+                        //            Console.WriteLine("Pапись расшифровки не добавлена в Базу Данных");
+                        //        }
+
+                        //        continue;
+                        //    }
+                    }
+
+                } // здесь была строка с номером или аб. платой
+                else // иначе пытаемся поймать поля с датой
+                {   
+                    string str_d = line.Substring(0, 6) + "20" + line.Substring(6, 2);
+                    //  string str_d = "01.05.2017";
+            
+                    DateTime? d;
+                    try
+                    {
+                        d = DateTime.ParseExact(str_d, "d", null);
+                        if (ret != null)
+                        {
+                            // ret.Body.Add(line + CurrentPhone);
+                        }
+                    }
+                    catch (SystemException)
+                    {
+                        d = null;
+                        // Console.WriteLine("Ошибка распознания даты, "+CurrentPhone);
+                        continue;
+
+                    }
+
+                    Day_event = line.Substring(0, 2);
+                    Time_event = line.Substring(9, 8);
+               
+                     string[] splitResult = Regex.Split(line, Separator);
+
+                    //!!!!!! Ниже поля "Начисление:" - для них необходимо учесть особенности начислений по типу Тихомирва, номер: ...272
+                    if (splitResult[1].StartsWith("Начисление:"))
+                    {
+                        Place = splitResult[1].Trim(); //Для Теле2 условно запишем в это поле Вид тарифа
+                        Service = "Subscriber";
+                        Callnumber = splitResult[6].Trim();
+                        Final_Time_d = 0;
+                        Mess = "";
+                        input_call = 0;
+
+                    }
+                    else
+                    {
+                        Place = splitResult[1].Trim(); //Для Теле2 условно запишем в это поле Вид тарифа
+                        Service = splitResult[2].Trim();
+                        Callnumber = splitResult[4].Trim();
+                  
+                    }
+                    // разбор минут 
+                    if (splitResult[7].Length == 5) // минуты-секунды
+                    {
+                        if (splitResult[7].Substring(2, 1) == ":")
+                        {
+                            if (splitResult[7] == "00:00") // Это СМС
+                            {
+                                Final_Time_d = 1;
+                                Mess = "Штука";
+                            }
+                            else  // в других случаях голосовой трафик
+                            {
+                                Final_Time_d = Convert.ToInt32(splitResult[7].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[7].Substring(3, 2));
+                                Mess = "Секунда";
+                            }
+                        }
+                        else
+                            Final_Time_d =0;
+                    }
+                    else
+                    {
+                        if (splitResult[7].Length == 8) // часы-минуты-секунды
+                        {
+                            if (splitResult[7].Substring(2, 1) == ":")
+                            {
+                                Final_Time_d = Convert.ToInt32(splitResult[7].Substring(0, 2)) * 3600 + Convert.ToInt32(splitResult[7].Substring(3, 2)) * 60 + Convert.ToInt32(splitResult[7].Substring(6, 2));
+                                Mess = "Секунда";
+                            }
+                            else
+                                Final_Time_d = 0;
+                        }
+
+                    }
+
+                    if ((splitResult[7].Length == 0) && (splitResult[2] == "Internet-трафик")) //А здесь интернет трафик
+                    {
+                            // Здесь нужно сделать разбор поля 4 - callnumber и полчить число байт а затем перевести в килобайты!!!
+                            if (splitResult[4].IndexOf("байт") >= 0)
+                            {
+                                int pos_bait_start = 7;
+                                int pos_bait_end = splitResult[4].IndexOf("байт");
+                                Final_Time = splitResult[4].Substring(pos_bait_start, pos_bait_end-pos_bait_start);// подставить значение байт!!!!
+                                Final_Time_d =Convert.ToDecimal(Final_Time.Trim())/1024;// переводим из строки в килобайты и числовое значение   
+                                Final_Time = Final_Time_d.ToString();
+                                Mess = "Килобайт";
+                            }
+                            
+                    }
+
+                        Cost = splitResult[9];
+                        Final_Cost = Convert.ToDecimal(Cost.Trim());
+                        Final_Cost = Final_Cost / Convert.ToDecimal(1.18);
+                        SummCalcCost = SummCalcCost + Final_Cost; 
+
+                    if (splitResult[2].Length >= 5)
+                    {
+                        if ((splitResult[2].Substring(0, 5) == "Исход") || (splitResult[2].Substring(0, 3) == "SMS"))
+                        {
+                            input_call = 0;
+                        }
+                        else
+                        {
+                            input_call = 1;
+                        }
+                        if((splitResult[2].LastIndexOf("SMS")>=0) && (Mess==""))
+                        {
+                            Mess = "Штука";
+                            Final_Time_d = Convert.ToDecimal(1);
+                        }
+                    }
+
+                    try
+                    {
+
+                        System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                       // cmd.CommandText = "INSERT MobileTable (phone_number) VALUES ('79026459606')";
+                        cmd.CommandText = "INSERT MobileTable (phone_number,date_event,time_event,service,target_area,callnumber,call_area,year_event,month_event,day_event,clientaccount,duration,cost,mess,input_call,operator)" +
+                            "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess,@input_call,@operator)";
+                        {
+                            // Добавить параметры
+                            cmd.Parameters.AddWithValue("@phone_number", CurrentPhone.Trim());//+
+                            cmd.Parameters.AddWithValue("@date_event", d); //+
+                            cmd.Parameters.AddWithValue("@time_event", Time_event.Trim());//+
+                            cmd.Parameters.AddWithValue("@service", Service.Trim());//+
+                            cmd.Parameters.AddWithValue("@target_area", Target_area);//+
+                            cmd.Parameters.AddWithValue("@callnumber", Callnumber.Trim());//+
+                            cmd.Parameters.AddWithValue("@call_area", Place.Trim()); //+
+                            cmd.Parameters.AddWithValue("@year_event", Year_event);//+
+                            cmd.Parameters.AddWithValue("@month_event", Month_event);//+
+                            cmd.Parameters.AddWithValue("@day_event", Day_event.Trim());//+
+                            cmd.Parameters.AddWithValue("@clientaccount", Account_Number.Trim());//+
+                            cmd.Parameters.AddWithValue("@duration",Final_Time_d); //+
+                            cmd.Parameters.AddWithValue("@cost", Final_Cost);//+
+                            cmd.Parameters.AddWithValue("@mess", Mess.Trim());//+
+                            cmd.Parameters.AddWithValue("@input_call", input_call);//+
+                            cmd.Parameters.AddWithValue("@operator", "Tele2");//+
+
+
+                        }
+                        cmd.Connection = sqlConnection1;
+                        sqlConnection1.Open();
+                        cmd.ExecuteNonQuery();
+                        sqlConnection1.Close();
+
+                    }
+                    catch
+                    {
+                        sqlConnection1.Close();
+                        Console.WriteLine("Ошибка Записи строки: " + GlobalCounter.ToString());
+                    }
+                }
+
+            }
+        }
+    }
+
+
 }
 
     
