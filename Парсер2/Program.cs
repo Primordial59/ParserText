@@ -229,6 +229,10 @@ namespace Парсер2
                             Day_event = date_event.Substring(0, 2);     //
                             call_number = "Subscriber";                 //
                             service = textReader.GetAttribute("n");   //
+                            if (service.Length>100)
+                            {
+                                service = service.Substring(0, 99);
+                            }
                             cost = textReader.GetAttribute("awt");    //
                             if (cost != "")
                             {
@@ -250,7 +254,11 @@ namespace Парсер2
                             call_area = textReader.GetAttribute("zp");  //
                             target_area = textReader.GetAttribute("zv");
                             service = textReader.GetAttribute("s");  //
-                            cost = textReader.GetAttribute("c");  //
+                            if (service.Length > 100)
+                            {
+                                service = service.Substring(0, 99);
+                            }
+                                cost = textReader.GetAttribute("c");  //
                             if (cost != "")
                             {
                                 CalcCost = CalcCost + Convert.ToDecimal(cost);
@@ -438,6 +446,7 @@ namespace Парсер2
             String Cost = "";
             int input_call = 0;
             String Day_event = "";
+            String Phone = "";
 
             // !!!! Поля ниже следует корректировать перед каждой загрузкой!!!!
             int Year_event = 0;
@@ -466,7 +475,7 @@ namespace Парсер2
             Console.WriteLine("Введителицевой счет и нажмите Enter , например: 73711191");
             try
             {
-                Account_Number = Console.ReadLine();
+                Account_Number   = Console.ReadLine();
             }
             catch
             {
@@ -515,7 +524,15 @@ namespace Парсер2
                         ItIsRouming = false;
                     }
 
-                    string Phone = line.Substring(53, 11); // выделяем из строки номер
+                    if (Account_Number == "143017611") // для московского мегафона свой формат файла!!
+                    {
+                         Phone = "7" + line.Substring(52, 10); // выделяем из строки номер
+                    }
+                    else // прочие Лицевые Счета из Перми
+                    {
+                         Phone = line.Substring(53, 11); // выделяем из строки номер
+                    }
+
                     if (CurrentPhone != Phone)
                     {
                         // здесь можно инициализирвоать новый объект для очередного номера телефона
@@ -563,100 +580,214 @@ namespace Парсер2
                     //   Console.WriteLine("Направление вызова: " + splitResult[6]); // !!!!здесь "Дата-время отображения на балансе"  для роуминга
                     //   Console.WriteLine("Номер оппонента: " + splitResult[9]); //совпадает для роуминга и домашней сети
                     //   Console.WriteLine("Место вызова: " + splitResult[10]); !!!!здесь "Пусто"  для роуминга
-                    if (ItIsRouming)
-                    {
-                        Place = splitResult[19];
-                    }
-                    else
-                    {
-                        Place = splitResult[10];
-                    }
 
-                    // Далее минуты перведем из формата ЧЧ:ММ в целое число
-                    if (ItIsRouming)
-                    {
-                        if (splitResult[11].Length == 5)
+                    if (Account_Number != "143017611") // для московского мегафона свой формат файла!!
+                    { if (ItIsRouming)
                         {
-                            if (splitResult[11].Substring(2, 1) == ":")
-                            {
-                                Time_min = Convert.ToInt32(splitResult[11].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[11].Substring(3, 2));
-                            }
-                        }
-
-                        if (Time_min != 0)
-                        {
-                            Final_Time = Time_min.ToString();
+                            Place = splitResult[19];
                         }
                         else
                         {
-                            Final_Time = splitResult[11];
+                            Place = splitResult[10];
                         }
+                    }
+                    else
+                        Place = "";
+
+                    // Далее минуты перведем из формата ЧЧ:ММ в целое число
+                    if (ItIsRouming)  // для Московскго Мегафона пока исходим из одинаковости нероумингово и роумингово файлов (последних пока не было)
+                    {
+
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                        {
+                            if (splitResult[11].Length == 5)
+                            {
+                                if (splitResult[11].Substring(2, 1) == ":")
+                                {
+                                    Time_min = Convert.ToInt32(splitResult[11].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[11].Substring(3, 2));
+                                }
+                            }
+
+                            if (Time_min != 0)
+                            {
+                                Final_Time = Time_min.ToString();
+                            }
+                            else
+                            {
+                                Final_Time = splitResult[11];
+                            }
+                        }
+                        else // для Москвы
+                        {
+                            if (splitResult[6].Length == 5)
+                            {
+                                if (splitResult[6].Substring(2, 1) == ":")
+                                {
+                                    Time_min = Convert.ToInt32(splitResult[6].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[6].Substring(3, 2));
+                                }
+                            }
+
+                            if (Time_min != 0)
+                            {
+                                Final_Time = Time_min.ToString();
+                            }
+                            else
+                            {
+                                Final_Time = splitResult[6];
+                            }
+                        }
+
+
                     }
                     else // разбор минут не в роуминге
                     {
-                        if (splitResult[14].Length == 5)
+
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
                         {
-                            if (splitResult[14].Substring(2, 1) == ":")
-                            {
-                                Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(3, 2));
-                            }
-                            else
-                                Time_min = 0;
-                        }
-                        else
-                        {
-                            if (splitResult[14].Length == 8)
+                            if (splitResult[14].Length == 5)
                             {
                                 if (splitResult[14].Substring(2, 1) == ":")
                                 {
-                                    Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 3600 + Convert.ToInt32(splitResult[14].Substring(3, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(6, 2));
+                                    Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(3, 2));
                                 }
                                 else
                                     Time_min = 0;
                             }
-                        }
-
-                        if (Time_min != 0)
-                        {
-                            Final_Time = Time_min.ToString();
-                        }
-                        else
-                        {
-                            if (splitResult[14] != "")
+                            else
                             {
-                                Final_Time = splitResult[14];
+                                if (splitResult[14].Length == 8)
+                                {
+                                    if (splitResult[14].Substring(2, 1) == ":")
+                                    {
+                                        Time_min = Convert.ToInt32(splitResult[14].Substring(0, 2)) * 3600 + Convert.ToInt32(splitResult[14].Substring(3, 2)) * 60 + Convert.ToInt32(splitResult[14].Substring(6, 2));
+                                    }
+                                    else
+                                        Time_min = 0;
+                                }
+                            }
+
+                            if (Time_min != 0)
+                            {
+                                Final_Time = Time_min.ToString();
                             }
                             else
-                                Final_Time = "1"; // подстраховка на тот случай, когда в количестыве SMS не указано "1 штука"
+                            {
+                                if (splitResult[14] != "")
+                                {
+                                    Final_Time = splitResult[14];
+                                }
+                                else
+                                    Final_Time = "1"; // подстраховка на тот случай, когда в количестыве SMS не указано "1 штука"
 
+                            }
                         }
+                        else // Для Москвы
+                        {
+
+                            if (splitResult[6].Length == 5)
+                            {
+                                if (splitResult[6].Substring(2, 1) == ":")
+                                {
+                                    Time_min = Convert.ToInt32(splitResult[6].Substring(0, 2)) * 60 + Convert.ToInt32(splitResult[6].Substring(3, 2));
+                                }
+                                else
+                                    Time_min = 0;
+                            }
+                            else
+                            {
+                                if (splitResult[6].Length == 8)
+                                {
+                                    if (splitResult[6].Substring(2, 1) == ":")
+                                    {
+                                        Time_min = Convert.ToInt32(splitResult[6].Substring(0, 2)) * 3600 + Convert.ToInt32(splitResult[6].Substring(3, 2)) * 60 + Convert.ToInt32(splitResult[6].Substring(6, 2));
+                                    }
+                                    else
+                                        Time_min = 0;
+                                }
+                            }
+
+                            if (Time_min != 0)  // здесь покажутся разобранные чуть ранее минуты, а прочее разберем чуть ниже
+                            {
+                                Final_Time = Time_min.ToString();
+                            }
+                            else  // а ниже будет интернет трафик, либо SMS
+                            {
+                                if (splitResult[6] != "")
+                                {
+                                    if (splitResult[6].Contains("."))
+                                    {
+                                        Final_Time=splitResult[6].Replace(".", ""); // убрав точку мы Мегабайты превращаем к Килобайты
+                                    }
+                                    else
+                                    Final_Time = splitResult[6];
+                                }
+                                else
+                                    Final_Time = "1"; // подстраховка на тот случай, когда в количестыве SMS не указано "1 штука"
+
+                            }
+
+
+                        } 
+
+
+
                     }
                     // Console.WriteLine("Прод/Объем: " + Final_Time);
                     // Console.WriteLine("Единица: " + splitResult[15]);
-                    if (ItIsRouming)
+                    if (ItIsRouming)  // для Московскго Мегафона пока исходим из одинаковости нероумингово и роумингово файлов (последних пока не было)
                     {
-                        Mess = splitResult[13];
-                        if ((Mess == "Минута") || (Mess == "Минут"))
-                        { Mess = "Секунда"; }
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                        {
+                            Mess = splitResult[13];
+                            if ((Mess == "Минута") || (Mess == "Минут"))
+                            { Mess = "Секунда"; }
+                        }
+                        else
+                        {
+                            Mess = splitResult[8];  //предварительно, чуть выше,  мы Мегабайты превратили в Килобайты, а значит и подпись поменяем
+                            if (Mess == "Мб.")
+                            { Mess = "Килобайт"; }
+
+                        }
+
+
                     }
                     else
                     {
-                        Mess = splitResult[15];
-                        if ((Mess == "Минута") || (Mess == "Минут"))
-                        { Mess = "Секунда"; }
-
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                        {
+                            Mess = splitResult[15];
+                            if ((Mess == "Минута") || (Mess == "Минут"))
+                            { Mess = "Секунда"; }
+                        }
+                        else
+                        {
+                            Mess = splitResult[8];
+                            if (Mess == "Мб.") //предварительно, чуть выше,  мы Мегабайты превратили в Килобайты, а значит и подпись поменяем
+                            { Mess = "Килобайт"; }
+                        }
+                         
                     }
 
-                    if (ItIsRouming)
+                    if (ItIsRouming) // для Московскго Мегафона пока исходим из одинаковости нероумингово и роумингово файлов (последних пока не было)
                     {
-                        Cost = splitResult[16];
+
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                            Cost = splitResult[16];
+                        else
+                            Cost = splitResult[12];
+
                         Final_Cost = Convert.ToDecimal(Cost.Trim());
                         Final_Cost = Final_Cost / Convert.ToDecimal(1.18);
                         SummCalcCost = SummCalcCost + Final_Cost;
                     }
                     else
                     {
-                        Cost = splitResult[18];
+                        if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                            Cost = splitResult[18];
+                        else
+                            Cost = splitResult[12];
+
                         Final_Cost = Convert.ToDecimal(Cost.Trim());
                         Final_Cost = Final_Cost / Convert.ToDecimal(1.18);
                         SummCalcCost = SummCalcCost + Final_Cost;
@@ -667,14 +798,18 @@ namespace Парсер2
                     // Console.WriteLine("Месяц: " + splitResult[27]);
                     // Console.WriteLine("День: " + splitResult[28]);
                     // Console.WriteLine("Лицевой счет: " + splitResult[29]);
-                    if (splitResult[5].Substring(0, 4) == "Вход")
+                    if (splitResult[5].Length > 0)
                     {
-                        input_call = 1;
+                        if (splitResult[5].Substring(0, 4) == "Вход")
+                        {
+                            input_call = 1;
+                        }
+                        else
+                        {
+                            input_call = 0;
+                        }
                     }
-                    else
-                    {
-                        input_call = 0;
-                    }
+
 
                     try
                     {
@@ -686,16 +821,34 @@ namespace Парсер2
                             "VALUES (@phone_number,@date_event,@time_event,@service,@target_area,@callnumber,@call_area,@year_event,@month_event,@day_event,@clientaccount,@duration,@cost,@mess,@input_call,@operator)";
                         {
                             // Добавить параметры
-                            cmd.Parameters.AddWithValue("@phone_number", splitResult[25].Trim());
+                            // cmd.Parameters.AddWithValue("@phone_number", splitResult[25].Trim());
+                            cmd.Parameters.AddWithValue("@phone_number", CurrentPhone.Trim());
+
                             cmd.Parameters.AddWithValue("@date_event", d);
                             cmd.Parameters.AddWithValue("@time_event", splitResult[3].Trim());
-                            cmd.Parameters.AddWithValue("@service", splitResult[5].Trim());
-                            cmd.Parameters.AddWithValue("@target_area", splitResult[6].Trim());
-                            cmd.Parameters.AddWithValue("@callnumber", splitResult[9].Trim());
+                            if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                                cmd.Parameters.AddWithValue("@service", splitResult[5].Trim());
+                            else
+                                cmd.Parameters.AddWithValue("@service", splitResult[9].Trim());
+
+                            if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                                cmd.Parameters.AddWithValue("@target_area", splitResult[6].Trim());
+                            else
+                                cmd.Parameters.AddWithValue("@target_area", splitResult[10].Trim());
+
+
+                            if (Account_Number != "143017611") // для НЕ московского мегафона свой формат файла!!
+                                cmd.Parameters.AddWithValue("@callnumber", splitResult[9].Trim());
+                            else
+                                cmd.Parameters.AddWithValue("@callnumber", splitResult[5].Trim());
+
                             cmd.Parameters.AddWithValue("@call_area", Place.Trim());
                             cmd.Parameters.AddWithValue("@year_event", Year_event);
                             cmd.Parameters.AddWithValue("@month_event", Month_event);
-                            cmd.Parameters.AddWithValue("@day_event", splitResult[28].Trim());
+
+                            //cmd.Parameters.AddWithValue("@day_event", splitResult[28].Trim());
+                            cmd.Parameters.AddWithValue("@day_event", Day_event.Trim());
+
                             cmd.Parameters.AddWithValue("@clientaccount", Account_Number.Trim());
                             cmd.Parameters.AddWithValue("@duration", Convert.ToDecimal(Final_Time.Trim()));
                             cmd.Parameters.AddWithValue("@cost", Final_Cost);
