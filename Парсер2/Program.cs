@@ -798,17 +798,37 @@ namespace Парсер2
                     // Console.WriteLine("Месяц: " + splitResult[27]);
                     // Console.WriteLine("День: " + splitResult[28]);
                     // Console.WriteLine("Лицевой счет: " + splitResult[29]);
-                    if (splitResult[5].Length > 0)
+                    if (Account_Number != "143017611") // Для НЕ Москвы
                     {
-                        if (splitResult[5].Substring(0, 4) == "Вход")
+                        if (splitResult[5].Length > 0)
                         {
-                            input_call = 1;
-                        }
-                        else
-                        {
-                            input_call = 0;
+                            if (splitResult[5].Substring(0, 4) == "Вход")
+                            {
+                                input_call = 1;
+                            }
+                            else
+                            {
+                                input_call = 0;
+                            }
                         }
                     }
+                    else // Для Москвы
+                    {
+                        if (splitResult[9].Length >= 4)
+                        {
+                            if (splitResult[9].Substring(0, 4) == "Вход")
+                            {
+                                input_call = 1;
+                            }
+                            else
+                            {
+                                input_call = 0;
+                            }
+                        }
+                        else
+                            input_call = 0;
+                    }
+
 
 
                     try
